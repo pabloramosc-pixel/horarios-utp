@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Horarios UTP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1E2A44;
+    --ink-2:#2E3B5C;
+    --paper:#F4F6F5;
+    --card:#FFFFFF;
+    --line:#E1E4E8;
+    --text:#1C1F26;
+    --muted:#5B6472;
+    --gold:#C89B3C;
+    --gold-soft:#F3E7C9;
+    --green:#3F7D58;
+    --green-soft:#E4F1E9;
+    --red:#B23A48;
+    --red-soft:#F8E4E6;
+    --recreo:#EDEFF2;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    background:var(--paper);
+    color:var(--text);
+    -webkit-tap-highlight-color:transparent;
+    padding-bottom:76px;
+  }
+  h1,h2,h3,h4{font-family:'Source Serif 4',Georgia,serif;margin:0;color:var(--ink);}
+  h1{font-size:1.25rem;font-weight:700;}
+  h2{font-size:1.05rem;font-weight:600;margin-bottom:10px;}
+  h3{font-size:0.95rem;font-weight:600;}
+  p{margin:0;}
+  button{font-family:inherit;cursor:pointer;}
+  input,select{font-family:inherit;}
+
+  #topbar{
+    position:sticky;top:0;z-index:20;
+    background:var(--ink);color:#fff;
+    padding:14px 16px 12px;
+    display:flex;flex-direction:column;gap:2px;
+    box-shadow:0 1px 0 rgba(0,0,0,0.08);
+  }
+  #topbar .est{font-size:0.72rem;color:#B9C2D6;letter-spacing:.02em;}
+  #app-content{padding:14px 12px 20px;max-width:720px;margin:0 auto;}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:8px;
+    padding:14px;margin-bottom:12px;
+  }
+  .row{display:flex;gap:8px;align-items:center;}
+  .row.between{justify-content:space-between;}
+  .muted{color:var(--muted);font-size:0.85rem;}
+  .small{font-size:0.8rem;}
+
+  .field{margin-bottom:10px;}
+  .field label{display:block;font-size:0.78rem;color:var(--muted);margin-bottom:4px;font-weight:500;}
+  .field input[type=text],.field input[type=number],.field select{
+    width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;
+    font-size:0.92rem;background:#fff;color:var(--text);
+  }
+  .field input:focus,.field select:focus{outline:2px solid var(--gold);outline-offset:1px;}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    padding:9px 14px;border-radius:6px;border:1px solid transparent;
+    font-size:0.86rem;font-weight:600;
+  }
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-primary:active{background:var(--ink-2);}
+  .btn-gold{background:var(--gold);color:#3A2C0B;}
+  .btn-outline{background:transparent;color:var(--ink);border-color:var(--line);}
+  .btn-danger{background:transparent;color:var(--red);border-color:var(--red-soft);}
+  .btn-block{width:100%;}
+  .btn-sm{padding:6px 10px;font-size:0.78rem;}
+  .btn[disabled]{opacity:.45;}
+
+  .chip{
+    display:inline-flex;align-items:center;gap:4px;
+    padding:3px 9px;border-radius:20px;font-size:0.74rem;font-weight:600;
+    background:var(--gold-soft);color:#5A4315;
+  }
+  .chip.green{background:var(--green-soft);color:var(--green);}
+  .chip.red{background:var(--red-soft);color:var(--red);}
+
+  .list-item{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:11px 4px;border-bottom:1px solid var(--line);
+  }
+  .list-item:last-child{border-bottom:none;}
+  .list-item .name{font-weight:600;font-size:0.92rem;}
+
+  .empty{
+    text-align:center;padding:34px 16px;color:var(--muted);
+  }
+  .empty h3{color:var(--muted);margin-bottom:6px;}
+
+  #bottomnav{
+    position:fixed;bottom:0;left:0;right:0;z-index:30;
+    background:#fff;border-top:1px solid var(--line);
+    display:flex;padding:6px 2px calc(6px + env(safe-area-inset-bottom));
+  }
+  .navbtn{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+    background:transparent;border:none;padding:6px 2px;border-radius:8px;color:var(--muted);
+  }
+  .navbtn.active{color:var(--ink);}
+  .navbtn svg{width:20px;height:20px;}
+  .navbtn span{font-size:0.65rem;font-weight:600;}
+
+  table.grid{border-collapse:collapse;width:100%;font-size:0.72rem;}
+  table.grid th,table.grid td{border:1px solid var(--line);padding:0;text-align:center;}
+  table.grid th{background:var(--ink);color:#fff;font-weight:600;padding:6px 2px;font-size:0.68rem;}
+  .timecell{background:#F9FAFA;color:var(--muted);font-size:0.62rem;padding:4px 2px;width:52px;white-space:nowrap;}
+  .slotcell{height:46px;vertical-align:middle;cursor:pointer;padding:2px;}
+  .slotcell:active{filter:brightness(0.95);}
+  .slotcell.recreo,.slotcell.colacion{background:var(--recreo);color:var(--muted);font-size:0.62rem;cursor:default;}
+  .slotcell.conflict{outline:2px solid var(--red);outline-offset:-2px;}
+  .slot-asig{font-weight:700;font-size:0.68rem;line-height:1.15;}
+  .slot-prof{font-size:0.6rem;color:var(--muted);}
+  .gridwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  .tabbar2{display:flex;gap:6px;margin-bottom:12px;}
+  .tabbar2 button{flex:1;padding:8px 4px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:0.8rem;font-weight:600;}
+  .tabbar2 button.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .overlay{
+    position:fixed;inset:0;background:rgba(20,24,34,0.5);z-index:50;
+    display:flex;align-items:flex-end;justify-content:center;
+  }
+  .sheet{
+    background:#fff;width:100%;max-width:480px;border-radius:14px 14px 0 0;
+    padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+    max-height:85vh;overflow-y:auto;
+  }
+  .sheet-handle{width:36px;height:4px;background:var(--line);border-radius:2px;margin:0 auto 14px;}
+
+  .avail-grid{display:grid;gap:4px;}
+  .avail-cell{
+    padding:6px 2px;border-radius:5px;text-align:center;font-size:0.68rem;font-weight:600;
+    background:var(--green-soft);color:var(--green);border:1px solid transparent;
+  }
+  .avail-cell.off{background:var(--red-soft);color:var(--red);}
+
+  .violation{
+    display:flex;gap:8px;padding:9px 4px;border-bottom:1px solid var(--line);font-size:0.82rem;
+  }
+  .violation:last-child{border-bottom:none;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--red);margin-top:6px;flex-shrink:0;}
+
+  .swatch{width:14px;height:14px;border-radius:4px;display:inline-block;vertical-align:middle;}
+  .banner{
+    background:var(--gold-soft);color:#5A4315;border-radius:8px;padding:10px 12px;font-size:0.82rem;margin-bottom:12px;
+  }
+  #toast{
+    position:fixed;bottom:86px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:9px 16px;border-radius:20px;font-size:0.82rem;
+    z-index:60;opacity:0;transition:opacity .25s;pointer-events:none;
+  }
+  #toast.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <h1 id="topbarTitle">Horarios UTP</h1>
+  <div class="est" id="topbarSub">Cargando…</div>
+</div>
+
+<div id="app-content"><div class="empty"><h3>Cargando datos…</h3></div></div>
+<div id="saveIndicator" style="display:none;position:fixed;bottom:66px;left:8px;right:8px;z-index:25;background:#F8E4E6;color:#B23A48;border-radius:8px;padding:8px 12px;font-size:0.76rem;font-weight:600;"></div>
+
+<div id="bottomnav"></div>
+<div id="toast"></div>
+<div id="modal-root"></div>
+
+<script>
+/* ============================= ESTADO ============================= */
+const STORAGE_KEY = 'utp-schedule-state-v1';
+const DIAS_BASE = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+
+function uid(p){ return p+'_'+Math.random().toString(36).slice(2,9); }
+
+function defaultState(){
+  return {
+    config:{
+      establecimiento:'',
+      numDias:5,
+      maxHorasSeguidas:4,
+      bloques:[
+        {id:'b1',ini:'08:00',fin:'08:45',tipo:'clase'},
+        {id:'b2',ini:'08:45',fin:'09:30',tipo:'clase'},
+        {id:'r1',ini:'09:30',fin:'09:50',tipo:'recreo'},
+        {id:'b3',ini:'09:50',fin:'10:35',tipo:'clase'},
+        {id:'b4',ini:'10:35',fin:'11:20',tipo:'clase'},
+        {id:'r2',ini:'11:20',fin:'11:35',tipo:'recreo'},
+        {id:'b5',ini:'11:35',fin:'12:20',tipo:'clase'},
+        {id:'b6',ini:'12:20',fin:'13:05',tipo:'clase'},
+        {id:'c1',ini:'13:05',fin:'14:00',tipo:'colacion'},
+        {id:'b7',ini:'14:00',fin:'14:45',tipo:'clase'},
+        {id:'b8',ini:'14:45',fin:'15:30',tipo:'clase'},
+      ]
+    },
+    asignaturas:[],
+    profesores:[],
+    cursos:[],
+    horario:{}, // horario[cursoId][dayIdx][bloqueId] = {asignaturaId, profesorId} | null
+    ui:{ tab:'config' }
+  };
+}
+
+let state = null;
+let saveTimer = null;
+
+function claveDatos(){
+  return STORAGE_KEY;
+}
+
+async function loadState(){
+  try{
+    const res = localStorage.getItem(claveDatos());
+    if(res){
+      state = JSON.parse(res);
+      const def = defaultState();
+      if(!state.ui) state.ui = def.ui;
+      if(!state.config) state.config = def.config;
+      return;
+    }
+  }catch(e){ /* no existe aún */ }
+  state = defaultState();
+}
+
+function saveState(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>intentarGuardar(3), 300);
+}
+let ultimoErrorGuardado = '';
+let hayCambiosSinGuardar = false;
+
+async function intentarGuardar(reintentosRestantes){
+  try{
+    localStorage.setItem(claveDatos(), JSON.stringify(state));
+    ultimoErrorGuardado = '';
+    hayCambiosSinGuardar = false;
+    actualizarIndicadorGuardado();
+  }catch(e){
+    console.error('No se pudo guardar', e);
+    ultimoErrorGuardado = (e && e.message) ? e.message : String(e);
+    hayCambiosSinGuardar = true;
+    if(reintentosRestantes>0){
+      const espera = (4-reintentosRestantes)*500;
+      setTimeout(()=>intentarGuardar(reintentosRestantes-1), espera);
+    } else {
+      actualizarIndicadorGuardado();
+    }
+  }
+}
+
+function actualizarIndicadorGuardado(){
+  const el = document.getElementById('saveIndicator');
+  if(!el) return;
+  if(hayCambiosSinGuardar){
+    el.style.display = 'block';
+    el.textContent = '⚠️ Cambios sin guardar. Comprueba tu almacenamiento de navegador.';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+/* Diagnóstico: prueba escritura real y muestra el error exacto */
+async function ejecutarDiagnostico(){
+  const resultados = [];
+  try{
+    localStorage.setItem('utp-diag-test', JSON.stringify({t:Date.now()}));
+    localStorage.removeItem('utp-diag-test');
+    resultados.push(`<div class="violation"><span class="dot" style="background:var(--green)"></span><span><strong>Almacenamiento local:</strong> funcionando correctamente</span></div>`);
+  }catch(e){
+    const msg = (e && e.message) ? e.message : String(e);
+    resultados.push(`<div class="violation"><span class="dot"></span><span><strong>Almacenamiento local:</strong> falló — ${escapeHtml(msg)}</span></div>`);
+  }
+  const tam = new Blob([JSON.stringify(state)]).size;
+  const usados = Object.keys(localStorage).reduce((s,k)=>s+localStorage.getItem(k).length, 0);
+  resultados.push(`<div class="violation"><span class="dot" style="background:var(--muted)"></span><span><strong>Tamaño de tus datos:</strong> ${(tam/1024).toFixed(1)} KB</span></div>`);
+  resultados.push(`<div class="violation"><span class="dot" style="background:var(--muted)"></span><span><strong>Almacenamiento usado:</strong> ~${(usados/1024).toFixed(1)} KB (típicamente 5-10 MB disponibles)</span></div>`);
+  openSheet(`<h2>Diagnóstico de guardado</h2>${resultados.join('')}
+    <div style="height:12px;"></div>
+    <button class="btn btn-primary btn-block" onclick="closeModal()">Cerrar</button>`);
+}
+
+/* Respaldo por texto: funciona sin servidor */
+function abrirRespaldo(){
+  const datos = JSON.stringify(state);
+  openSheet(`
+    <h2>Respaldo de datos</h2>
+    <p class="small" style="margin-bottom:10px;">Copia este texto y guárdalo (correo, notas, WhatsApp). Sirve como respaldo y también para pasar los datos a otro dispositivo: allá pégalo en "Restaurar".</p>
+    <textarea id="backup_out" readonly style="width:100%;height:110px;font-size:0.7rem;border:1px solid var(--line);border-radius:6px;padding:8px;">${escapeHtml(datos)}</textarea>
+    <div style="height:8px;"></div>
+    <button class="btn btn-primary btn-block" onclick="copiarRespaldo()">Copiar respaldo</button>
+    <div style="height:18px;"></div>
+    <h2>Restaurar</h2>
+    <p class="small" style="margin-bottom:8px;">Pega aquí un respaldo para reemplazar los datos de este dispositivo.</p>
+    <textarea id="backup_in" placeholder="Pega el texto del respaldo aquí" style="width:100%;height:90px;font-size:0.7rem;border:1px solid var(--line);border-radius:6px;padding:8px;"></textarea>
+    <div style="height:8px;"></div>
+    <button class="btn btn-outline btn-block" onclick="restaurarRespaldo()">Restaurar estos datos</button>
+  `);
+}
+function copiarRespaldo(){
+  const ta = document.getElementById('backup_out');
+  ta.select();
+  navigator.clipboard?.writeText(ta.value).then(()=>toast('Respaldo copiado')).catch(()=>{
+    try{ document.execCommand('copy'); toast('Respaldo copiado'); }
+    catch(e){ toast('Selecciona el texto y cópialo manualmente'); }
+  });
+}
+function restaurarRespaldo(){
+  const txt = document.getElementById('backup_in').value.trim();
+  if(!txt){ toast('Pega un respaldo primero'); return; }
+  let nuevo;
+  try{ nuevo = JSON.parse(txt); }
+  catch(e){ toast('El texto no es un respaldo válido'); return; }
+  if(!nuevo.config || !nuevo.cursos){ toast('El texto no es un respaldo válido'); return; }
+  confirmarAccion('Se reemplazarán todos los datos actuales de este dispositivo por los del respaldo. ¿Continuar?', ()=>{
+    state = nuevo;
+    const def = defaultState();
+    if(!state.ui) state.ui = def.ui;
+    saveState(); render();
+    toast('Datos restaurados');
+  }, 'Restaurar');
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+/* ============================= HELPERS DE DOMINIO ============================= */
+function bloquesClase(){ return state.config.bloques.filter(b=>b.tipo==='clase'); }
+function diasActivos(){ return DIAS_BASE.slice(0, state.config.numDias); }
+
+function getAsignatura(id){ return state.asignaturas.find(a=>a.id===id); }
+function getProfesor(id){ return state.profesores.find(p=>p.id===id); }
+function getCurso(id){ return state.cursos.find(c=>c.id===id); }
+
+function profDisponible(prof, dayIdx, bloqueId){
+  if(!prof.disponibilidad) return true;
+  const d = prof.disponibilidad[dayIdx];
+  if(!d) return true;
+  return d[bloqueId] !== false;
+}
+
+function ensureHorarioCurso(cursoId){
+  if(!state.horario[cursoId]) state.horario[cursoId] = {};
+  diasActivos().forEach((_,dayIdx)=>{
+    if(!state.horario[cursoId][dayIdx]) state.horario[cursoId][dayIdx] = {};
+  });
+}
+
+/* Construye mapa de ocupación de profesores a partir del horario actual (todos los cursos) */
+function construirOcupacionProfesores(){
+  const ocup = {}; // ocup[profId][day][bloqueId] = cursoId
+  const horas = {}; // horas[profId] = n
+  state.cursos.forEach(curso=>{
+    ensureHorarioCurso(curso.id);
+    diasActivos().forEach((_,dayIdx)=>{
+      const dia = state.horario[curso.id][dayIdx] || {};
+      Object.keys(dia).forEach(bloqueId=>{
+        const cell = dia[bloqueId];
+        if(!cell) return;
+        ocup[cell.profesorId] = ocup[cell.profesorId] || {};
+        ocup[cell.profesorId][dayIdx] = ocup[cell.profesorId][dayIdx] || {};
+        ocup[cell.profesorId][dayIdx][bloqueId] = curso.id;
+        horas[cell.profesorId] = (horas[cell.profesorId]||0)+1;
+      });
+    });
+  });
+  return {ocup, horas};
+}
+
+function contarConsecutivos(ocupDia, bloquesOrdenados, idxCandidato, profId, dayIdx){
+  // cuenta bloques 'clase' consecutivos ocupados por profId alrededor de idxCandidato (sin contar el propio)
+  let back=0;
+  for(let i=idxCandidato-1;i>=0;i--){
+    const b = bloquesOrdenados[i];
+    if(b.tipo!=='clase') break;
+    if(ocupDia[dayIdx] && ocupDia[dayIdx][b.id]===profId) back++; else break;
+  }
+  let fwd=0;
+  for(let i=idxCandidato+1;i<bloquesOrdenados.length;i++){
+    const b = bloquesOrdenados[i];
+    if(b.tipo!=='clase') break;
+    if(ocupDia[dayIdx] && ocupDia[dayIdx][b.id]===profId) fwd++; else break;
+  }
+  return back+fwd+1;
+}
+
+function validarHorarios(){
+  const problemas = [];
+  const bloques = state.config.bloques;
+  const dias = diasActivos();
+  // ocupación cruzada por profesor (para detectar choques) + racha consecutiva
+  const profSlot = {}; // profSlot[profId][day][bloqueId] = [cursoNombre,...]
+  const profHoras = {};
+  state.cursos.forEach(curso=>{
+    ensureHorarioCurso(curso.id);
+    dias.forEach((_,dayIdx)=>{
+      const dia = state.horario[curso.id][dayIdx] || {};
+      Object.keys(dia).forEach(bloqueId=>{
+        const cell = dia[bloqueId];
+        if(!cell) return;
+        profSlot[cell.profesorId] = profSlot[cell.profesorId]||{};
+        profSlot[cell.profesorId][dayIdx] = profSlot[cell.profesorId][dayIdx]||{};
+        profSlot[cell.profesorId][dayIdx][bloqueId] = profSlot[cell.profesorId][dayIdx][bloqueId]||[];
+        profSlot[cell.profesorId][dayIdx][bloqueId].push(curso.nombre);
+        profHoras[cell.profesorId] = (profHoras[cell.profesorId]||0)+1;
+      });
+    });
+  });
+
+  // 1. Choques de profesor (mismo bloque, 2+ cursos)
+  Object.keys(profSlot).forEach(profId=>{
+    const prof = getProfesor(profId);
+    dias.forEach((diaNombre,dayIdx)=>{
+      const diaMap = profSlot[profId][dayIdx]||{};
+      Object.keys(diaMap).forEach(bloqueId=>{
+        if(diaMap[bloqueId].length>1){
+          const b = bloques.find(x=>x.id===bloqueId);
+          problemas.push(`${prof?prof.nombre:'Profesor'} está en ${diaMap[bloqueId].length} cursos a la vez el ${diaNombre} ${b?b.ini:''} (${diaMap[bloqueId].join(', ')}).`);
+        }
+      });
+    });
+  });
+
+  // 2. Exceso de horas seguidas
+  Object.keys(profSlot).forEach(profId=>{
+    const prof = getProfesor(profId);
+    dias.forEach((diaNombre,dayIdx)=>{
+      let racha=0, maxRacha=0;
+      bloques.forEach(b=>{
+        const ocupado = profSlot[profId][dayIdx] && profSlot[profId][dayIdx][b.id];
+        if(b.tipo==='clase' && ocupado){ racha++; maxRacha=Math.max(maxRacha,racha); }
+        else if(b.tipo!=='clase'){ racha=0; }
+      });
+      if(maxRacha > state.config.maxHorasSeguidas){
+        problemas.push(`${prof?prof.nombre:'Profesor'} tiene ${maxRacha} horas seguidas el ${diaNombre} (máximo configurado: ${state.config.maxHorasSeguidas}).`);
+      }
+    });
+  });
+
+  // 3. Exceso de horas contrato
+  state.profesores.forEach(p=>{
+    const asignadas = profHoras[p.id]||0;
+    if(p.horasContrato && asignadas > Number(p.horasContrato)){
+      problemas.push(`${p.nombre} tiene ${asignadas}h asignadas pero su contrato es de ${p.horasContrato}h.`);
+    }
+  });
+
+  // 4. Disponibilidad de profesor no respetada
+  state.cursos.forEach(curso=>{
+    dias.forEach((diaNombre,dayIdx)=>{
+      const dia = state.horario[curso.id] && state.horario[curso.id][dayIdx];
+      if(!dia) return;
+      Object.keys(dia).forEach(bloqueId=>{
+        const cell = dia[bloqueId];
+        if(!cell) return;
+        const prof = getProfesor(cell.profesorId);
+        if(prof && !profDisponible(prof, dayIdx, bloqueId)){
+          const b = bloques.find(x=>x.id===bloqueId);
+          problemas.push(`${prof.nombre} fue asignado en un horario marcado como no disponible: ${diaNombre} ${b?b.ini:''} (${curso.nombre}).`);
+        }
+      });
+    });
+  });
+
+  return problemas;
+}
+
+/* Horas pendientes por asignar (curso -> item -> faltan) */
+function calcularPendientes(){
+  const pendientes = [];
+  state.cursos.forEach(curso=>{
+    ensureHorarioCurso(curso.id);
+    (curso.items||[]).forEach(item=>{
+      let asignadas = 0;
+      diasActivos().forEach((_,dayIdx)=>{
+        const dia = state.horario[curso.id][dayIdx]||{};
+        Object.keys(dia).forEach(bloqueId=>{
+          const cell = dia[bloqueId];
+          if(cell && cell.asignaturaId===item.asignaturaId && cell.profesorId===item.profesorId) asignadas++;
+        });
+      });
+      const faltan = Number(item.horasSemanales) - asignadas;
+      if(faltan>0){
+        const asig = getAsignatura(item.asignaturaId);
+        pendientes.push({curso:curso.nombre, asignatura: asig?asig.nombre:'?', faltan});
+      }
+    });
+  });
+  return pendientes;
+}
+
+/* ============================= GENERADOR AUTOMÁTICO ============================= */
+function generarHorarios(){
+  if(state.cursos.length===0){ toast('Agrega al menos un curso primero'); return; }
+  const dias = diasActivos();
+  const bloques = state.config.bloques;
+  const claseBloques = bloquesClase();
+
+  // reset horarios
+  state.cursos.forEach(curso=>{
+    state.horario[curso.id] = {};
+    dias.forEach((_,dayIdx)=>{ state.horario[curso.id][dayIdx] = {}; });
+  });
+
+  const ocup = {}; // ocup[profId][day][bloqueId] = true
+  const horasProf = {}; // horasProf[profId]
+
+  function ocupado(profId, dayIdx, bloqueId){
+    return ocup[profId] && ocup[profId][dayIdx] && ocup[profId][dayIdx][bloqueId];
+  }
+  function marcarOcupado(profId, dayIdx, bloqueId){
+    ocup[profId] = ocup[profId]||{};
+    ocup[profId][dayIdx] = ocup[profId][dayIdx]||{};
+    ocup[profId][dayIdx][bloqueId] = true;
+    horasProf[profId] = (horasProf[profId]||0)+1;
+  }
+
+  // construir lista de unidades a ubicar
+  let unidades = [];
+  state.cursos.forEach(curso=>{
+    (curso.items||[]).forEach(item=>{
+      const n = Number(item.horasSemanales)||0;
+      for(let i=0;i<n;i++){
+        unidades.push({cursoId:curso.id, asignaturaId:item.asignaturaId, profesorId:item.profesorId, horasSemanales:n});
+      }
+    });
+  });
+
+  // priorizar: profesores con menos disponibilidad primero, y cursos con más carga primero
+  function disponibilidadCount(profId){
+    let c=0;
+    const prof = getProfesor(profId);
+    if(!prof) return 999;
+    dias.forEach((_,dayIdx)=>{ claseBloques.forEach(b=>{ if(profDisponible(prof,dayIdx,b.id)) c++; }); });
+    return c;
+  }
+  unidades.sort((a,b)=> disponibilidadCount(a.profesorId) - disponibilidadCount(b.profesorId));
+
+  const ultimoDiaAsignaturaCurso = {}; // key cursoId+asignaturaId -> set de dias usados
+  const conteoAsignaturaCursoDia = {}; // key cursoId+asignaturaId+dayIdx -> n
+
+  unidades.forEach(u=>{
+    const prof = getProfesor(u.profesorId);
+    if(!prof) return;
+    const key = u.cursoId+'|'+u.asignaturaId;
+    const numDiasDisp = dias.length;
+    const repartoMax = Math.max(1, Math.ceil(u.horasSemanales / numDiasDisp));
+
+    // generar orden de días priorizando el menos usado por esta asignatura en este curso
+    const ordenDias = dias.map((_,idx)=>idx).sort((a,b)=>{
+      const ca = conteoAsignaturaCursoDia[key+'|'+a]||0;
+      const cb = conteoAsignaturaCursoDia[key+'|'+b]||0;
+      return ca-cb;
+    });
+
+    let colocado = false;
+    for(const dayIdx of ordenDias){
+      if(colocado) break;
+      const usadasEsteDia = conteoAsignaturaCursoDia[key+'|'+dayIdx]||0;
+      if(usadasEsteDia >= repartoMax) continue;
+      for(let bi=0; bi<claseBloques.length; bi++){
+        const b = claseBloques[bi];
+        const idxGlobal = bloques.findIndex(x=>x.id===b.id);
+        // slot ya ocupado en este curso?
+        if(state.horario[u.cursoId][dayIdx][b.id]) continue;
+        // profesor disponible?
+        if(!profDisponible(prof, dayIdx, b.id)) continue;
+        // profesor libre (sin choque)?
+        if(ocupado(u.profesorId, dayIdx, b.id)) continue;
+        // horas contrato
+        if(prof.horasContrato && (horasProf[u.profesorId]||0) >= Number(prof.horasContrato)) continue;
+        // horas seguidas
+        const rachaSimulada = contarConsecutivos(
+          Object.fromEntries(Object.entries(ocup[u.profesorId]||{}).map(([d,m])=>[d,m])),
+          bloques, idxGlobal, true, dayIdx
+        );
+        // recomputo racha real usando ocup como mapa profId->true
+        const ocupDiaBool = {};
+        ocupDiaBool[dayIdx] = {};
+        bloques.forEach(bb=>{ ocupDiaBool[dayIdx][bb.id] = ocupado(u.profesorId,dayIdx,bb.id) ? u.profesorId : null; });
+        const racha = contarConsecutivos(ocupDiaBool, bloques, idxGlobal, u.profesorId, dayIdx);
+        if(racha > state.config.maxHorasSeguidas) continue;
+
+        // todo ok: colocar
+        state.horario[u.cursoId][dayIdx][b.id] = {asignaturaId:u.asignaturaId, profesorId:u.profesorId};
+        marcarOcupado(u.profesorId, dayIdx, b.id);
+        conteoAsignaturaCursoDia[key+'|'+dayIdx] = usadasEsteDia+1;
+        colocado = true;
+        break;
+      }
+    }
+    u._colocado = colocado;
+  });
+
+  saveState();
+  const pendientes = unidades.filter(u=>!u._colocado).length;
+  if(pendientes>0){
+    toast(`Horario generado con ${pendientes} hora(s) sin ubicar. Revisa "Pendientes".`);
+  } else {
+    toast('Horario generado sin horas pendientes ✓');
+  }
+}
+
+/* ============================= RENDER: SHELL ============================= */
+const TABS = [
+  {id:'config', label:'Config', icon:'gear'},
+  {id:'profesores', label:'Profesores', icon:'users'},
+  {id:'asignaturas', label:'Asignaturas', icon:'book'},
+  {id:'cursos', label:'Cursos', icon:'layers'},
+  {id:'horarios', label:'Horarios', icon:'grid'},
+];
+
+const ICONS = {
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9c.14.36.38.68.7.9.32.2.68.32 1.06.32H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.78Z"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>',
+  layers:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>',
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>',
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>',
+  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+};
+
+function renderNav(){
+  const nav = document.getElementById('bottomnav');
+  nav.innerHTML = TABS.map(t=>`
+    <button class="navbtn ${state.ui.tab===t.id?'active':''}" onclick="setTab('${t.id}')">
+      ${ICONS[t.icon]}<span>${t.label}</span>
+    </button>`).join('');
+}
+
+function setTab(tab){
+  state.ui.tab = tab;
+  render();
+}
+
+function render(){
+  const baseTxt = state.config.establecimiento || 'Generador de horarios para UTP';
+  document.getElementById('topbarSub').textContent = baseTxt;
+  renderNav();
+  const c = document.getElementById('app-content');
+  if(state.ui.tab==='config') c.innerHTML = renderConfig();
+  else if(state.ui.tab==='profesores') c.innerHTML = renderProfesores();
+  else if(state.ui.tab==='asignaturas') c.innerHTML = renderAsignaturas();
+  else if(state.ui.tab==='cursos') c.innerHTML = renderCursos();
+  else if(state.ui.tab==='horarios') c.innerHTML = renderHorarios();
+}
+
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+function openSheet(html){
+  document.getElementById('modal-root').innerHTML = `
+    <div class="overlay" onclick="if(event.target===this) closeModal()">
+      <div class="sheet">
+        <div class="sheet-handle"></div>
+        ${html}
+      </div>
+    </div>`;
+}
+let _confirmCallback = null;
+function confirmarAccion(mensaje, onConfirm, textoBoton){
+  _confirmCallback = onConfirm;
+  openSheet(`
+    <h2>Confirmar</h2>
+    <p class="small" style="margin-bottom:18px;">${mensaje}</p>
+    <div class="row">
+      <button class="btn btn-outline btn-block" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-danger btn-block" onclick="ejecutarConfirmacion()">${textoBoton||'Confirmar'}</button>
+    </div>
+  `);
+}
+function ejecutarConfirmacion(){
+  const cb = _confirmCallback;
+  _confirmCallback = null;
+  closeModal();
+  if(cb) cb();
+}
+
+/* ============================= TAB: CONFIGURACIÓN ============================= */
+function renderConfig(){
+  const cfg = state.config;
+  const bloquesRows = cfg.bloques.map((b,i)=>`
+    <div class="list-item">
+      <div>
+        <div class="name">${b.ini} – ${b.fin}</div>
+        <div class="muted small">${b.tipo==='clase'?'Bloque de clase':(b.tipo==='recreo'?'Recreo':'Colación')}</div>
+      </div>
+      <div class="row">
+        <button class="btn btn-outline btn-sm" onclick="editarBloque(${i})">${ICONS.edit}</button>
+        <button class="btn btn-danger btn-sm" onclick="eliminarBloque(${i})">${ICONS.trash}</button>
+      </div>
+    </div>`).join('') || `<div class="empty small">No hay bloques horarios.</div>`;
+
+  return `
+    <div class="card">
+      <h2>Establecimiento</h2>
+      <div class="field">
+        <label>Nombre del colegio / liceo</label>
+        <input type="text" value="${escapeHtml(cfg.establecimiento)}" oninput="cfg_setNombre(this.value)" placeholder="Ej: Liceo Bicentenario Los Andes">
+      </div>
+      <div class="field">
+        <label>Días de clase a la semana</label>
+        <select onchange="cfg_setDias(this.value)">
+          ${[1,2,3,4,5,6].map(n=>`<option value="${n}" ${cfg.numDias==n?'selected':''}>${n} días (${DIAS_BASE.slice(0,n).join(', ')})</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label>Máximo de horas pedagógicas seguidas por profesor (sin recreo/colación de por medio)</label>
+        <input type="number" min="1" max="12" value="${cfg.maxHorasSeguidas}" oninput="cfg_setMaxHoras(this.value)">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row between"><h2>Bloques horarios</h2>
+        <button class="btn btn-gold btn-sm" onclick="nuevoBloque()">${ICONS.plus} Bloque</button>
+      </div>
+      <p class="muted small" style="margin-bottom:8px;">Define la estructura del día: bloques de clase, recreos y colación. Se aplica igual todos los días activos.</p>
+      ${bloquesRows}
+    </div>
+
+    ${renderCompartir()}
+
+    <div class="card">
+      <h2>Respaldo y diagnóstico</h2>
+      <p class="small" style="margin-bottom:10px;">Si ves errores de guardado, usa el diagnóstico para ver qué está fallando, y el respaldo para conservar tus datos de forma segura.</p>
+      <button class="btn btn-outline btn-block" onclick="abrirRespaldo()">Respaldo / restaurar datos</button>
+      <div style="height:8px;"></div>
+      <button class="btn btn-outline btn-block" onclick="ejecutarDiagnostico()">Diagnóstico de guardado</button>
+    </div>
+  `;
+}
+
+function renderCompartir(){
+  return `
+    <div class="card">
+      <h2>Compartir con otros dispositivos</h2>
+      <p class="small" style="margin-bottom:10px;">Usa la función <strong>Respaldo / restaurar datos</strong> más abajo para pasar el horario a otro dispositivo: copia el respaldo en un dispositivo y pégalo en el otro.</p>
+      <p class="muted small">Si todos trabajan desde este mismo celular, los cambios se guardan automáticamente y verán la versión más reciente siempre.</p>
+    </div>`;
+}
+
+function cfg_setNombre(v){
+  state.config.establecimiento=v; saveState();
+  document.getElementById('topbarSub').textContent = v||'Generador de horarios para UTP';
+}
+function cfg_setDias(v){ state.config.numDias=Number(v); saveState(); render(); }
+function cfg_setMaxHoras(v){ state.config.maxHorasSeguidas=Number(v)||1; saveState(); }
+
+function nuevoBloque(){
+  openSheet(`
+    <h2>Nuevo bloque</h2>
+    <div class="field"><label>Tipo</label>
+      <select id="nb_tipo"><option value="clase">Clase</option><option value="recreo">Recreo</option><option value="colacion">Colación</option></select>
+    </div>
+    <div class="field"><label>Hora inicio</label><input type="text" id="nb_ini" placeholder="08:00"></div>
+    <div class="field"><label>Hora término</label><input type="text" id="nb_fin" placeholder="08:45"></div>
+    <button class="btn btn-primary btn-block" onclick="guardarNuevoBloque()">Guardar</button>
+  `);
+}
+function guardarNuevoBloque(){
+  const tipo = document.getElementById('nb_tipo').value;
+  const ini = document.getElementById('nb_ini').value.trim();
+  const fin = document.getElementById('nb_fin').value.trim();
+  if(!ini||!fin){ toast('Completa las horas'); return; }
+  state.config.bloques.push({id:uid('bl'), ini, fin, tipo});
+  state.config.bloques.sort((a,b)=> a.ini.localeCompare(b.ini));
+  saveState(); closeModal(); render();
+}
+function editarBloque(i){
+  const b = state.config.bloques[i];
+  openSheet(`
+    <h2>Editar bloque</h2>
+    <div class="field"><label>Tipo</label>
+      <select id="eb_tipo">
+        <option value="clase" ${b.tipo==='clase'?'selected':''}>Clase</option>
+        <option value="recreo" ${b.tipo==='recreo'?'selected':''}>Recreo</option>
+        <option value="colacion" ${b.tipo==='colacion'?'selected':''}>Colación</option>
+      </select>
+    </div>
+    <div class="field"><label>Hora inicio</label><input type="text" id="eb_ini" value="${b.ini}"></div>
+    <div class="field"><label>Hora término</label><input type="text" id="eb_fin" value="${b.fin}"></div>
+    <button class="btn btn-primary btn-block" onclick="guardarEdicionBloque(${i})">Guardar</button>
+  `);
+}
+function guardarEdicionBloque(i){
+  const b = state.config.bloques[i];
+  b.tipo = document.getElementById('eb_tipo').value;
+  b.ini = document.getElementById('eb_ini').value.trim();
+  b.fin = document.getElementById('eb_fin').value.trim();
+  state.config.bloques.sort((a,b)=> a.ini.localeCompare(b.ini));
+  saveState(); closeModal(); render();
+}
+function eliminarBloque(i){
+  state.config.bloques.splice(i,1);
+  saveState(); render();
+}
+
+/* ============================= TAB: PROFESORES ============================= */
+function renderProfesores(){
+  if(state.profesores.length===0){
+    return `<div class="card empty"><h3>Sin profesores</h3><p class="small">Agrega a los profesores del establecimiento para poder asignarles horas.</p>
+      <div style="height:12px;"></div>
+      <button class="btn btn-primary" onclick="nuevoProfesor()">${ICONS.plus} Agregar profesor</button>
+    </div>`;
+  }
+  const items = state.profesores.map(p=>{
+    const asigs = (p.asignaturasIds||[]).map(id=>getAsignatura(id)).filter(Boolean);
+    return `
+    <div class="list-item">
+      <div>
+        <div class="name">${escapeHtml(p.nombre)}</div>
+        <div class="muted small">${p.horasContrato?p.horasContrato+'h contrato · ':''}${asigs.map(a=>a.nombre).join(', ')||'sin asignaturas'}</div>
+      </div>
+      <div class="row">
+        <button class="btn btn-outline btn-sm" onclick="editarProfesor('${p.id}')">${ICONS.edit}</button>
+        <button class="btn btn-danger btn-sm" onclick="eliminarProfesor('${p.id}')">${ICONS.trash}</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `
+    <div class="card">
+      <div class="row between"><h2>Profesores (${state.profesores.length})</h2>
+        <button class="btn btn-gold btn-sm" onclick="nuevoProfesor()">${ICONS.plus} Nuevo</button>
+      </div>
+      ${items}
+    </div>`;
+}
+
+function asignaturasCheckboxes(seleccionadas){
+  if(state.asignaturas.length===0) return `<p class="muted small">Primero crea asignaturas en la pestaña Asignaturas.</p>`;
+  return state.asignaturas.map(a=>`
+    <label class="row small" style="padding:6px 0;">
+      <input type="checkbox" value="${a.id}" ${seleccionadas.includes(a.id)?'checked':''}> ${escapeHtml(a.nombre)}
+    </label>`).join('');
+}
+
+function nuevoProfesor(){
+  openSheet(`
+    <h2>Nuevo profesor</h2>
+    <div class="field"><label>Nombre completo</label><input type="text" id="np_nombre" placeholder="Ej: María Pérez"></div>
+    <div class="field"><label>Horas de contrato semanales (opcional)</label><input type="number" id="np_horas" placeholder="Ej: 30"></div>
+    <div class="field"><label>Asignaturas que dicta</label><div id="np_asigs">${asignaturasCheckboxes([])}</div></div>
+    <button class="btn btn-primary btn-block" onclick="guardarNuevoProfesor()">Guardar</button>
+  `);
+}
+function guardarNuevoProfesor(){
+  const nombre = document.getElementById('np_nombre').value.trim();
+  if(!nombre){ toast('Ingresa un nombre'); return; }
+  const horas = document.getElementById('np_horas').value;
+  const asigs = Array.from(document.querySelectorAll('#np_asigs input:checked')).map(i=>i.value);
+  state.profesores.push({id:uid('prof'), nombre, horasContrato:horas?Number(horas):null, asignaturasIds:asigs, disponibilidad:{}});
+  saveState(); closeModal(); render();
+}
+function editarProfesor(id){
+  const p = getProfesor(id);
+  openSheet(`
+    <h2>Editar profesor</h2>
+    <div class="field"><label>Nombre completo</label><input type="text" id="ep_nombre" value="${escapeHtml(p.nombre)}"></div>
+    <div class="field"><label>Horas de contrato semanales (opcional)</label><input type="number" id="ep_horas" value="${p.horasContrato||''}"></div>
+    <div class="field"><label>Asignaturas que dicta</label><div id="ep_asigs">${asignaturasCheckboxes(p.asignaturasIds||[])}</div></div>
+    <button class="btn btn-primary btn-block" onclick="guardarEdicionProfesor('${id}')">Guardar</button>
+    <div style="height:8px;"></div>
+    <button class="btn btn-outline btn-block" onclick="closeModal();abrirDisponibilidad('${id}')">Definir disponibilidad horaria</button>
+  `);
+}
+function guardarEdicionProfesor(id){
+  const p = getProfesor(id);
+  p.nombre = document.getElementById('ep_nombre').value.trim();
+  const horas = document.getElementById('ep_horas').value;
+  p.horasContrato = horas?Number(horas):null;
+  p.asignaturasIds = Array.from(document.querySelectorAll('#ep_asigs input:checked')).map(i=>i.value);
+  saveState(); closeModal(); render();
+}
+function eliminarProfesor(id){
+  confirmarAccion('¿Eliminar este profesor? Se quitará de los cursos donde esté asignado.', ()=>{
+    state.profesores = state.profesores.filter(p=>p.id!==id);
+    state.cursos.forEach(c=>{ c.items = (c.items||[]).filter(it=>it.profesorId!==id); });
+    saveState(); render();
+  }, 'Eliminar');
+}
+
+function abrirDisponibilidad(profId){
+  const p = getProfesor(profId);
+  p.disponibilidad = p.disponibilidad || {};
+  const dias = diasActivos();
+  const claseBloques = bloquesClase();
+  let grid = `<div class="gridwrap"><table class="grid"><tr><th></th>${dias.map(d=>`<th>${d.slice(0,3)}</th>`).join('')}</tr>`;
+  claseBloques.forEach(b=>{
+    grid += `<tr><td class="timecell">${b.ini}</td>`;
+    dias.forEach((_,dayIdx)=>{
+      const disp = profDisponible(p, dayIdx, b.id);
+      grid += `<td class="slotcell ${disp?'':'recreo'}" style="background:${disp?'#E4F1E9':'#F8E4E6'};" onclick="toggleDisponibilidad('${profId}',${dayIdx},'${b.id}')">
+        <span style="font-size:0.62rem;color:${disp?'#3F7D58':'#B23A48'};font-weight:700;">${disp?'Sí':'No'}</span>
+      </td>`;
+    });
+    grid += `</tr>`;
+  });
+  grid += `</table></div>`;
+  openSheet(`
+    <h2>Disponibilidad de ${escapeHtml(p.nombre)}</h2>
+    <p class="muted small" style="margin-bottom:10px;">Toca un bloque para marcarlo como no disponible (permisos, media jornada, etc). Por defecto todo está disponible.</p>
+    ${grid}
+    <div style="height:10px;"></div>
+    <button class="btn btn-primary btn-block" onclick="closeModal();render();">Listo</button>
+  `);
+}
+function toggleDisponibilidad(profId, dayIdx, bloqueId){
+  const p = getProfesor(profId);
+  p.disponibilidad[dayIdx] = p.disponibilidad[dayIdx] || {};
+  const actual = profDisponible(p, dayIdx, bloqueId);
+  p.disponibilidad[dayIdx][bloqueId] = !actual;
+  saveState();
+  abrirDisponibilidad(profId);
+}
+
+/* ============================= TAB: ASIGNATURAS ============================= */
+const PALETA = ['#C89B3C','#3F7D58','#4C6FA6','#B23A48','#7A5CA8','#2E8B8B','#B0743C','#5B6472'];
+function renderAsignaturas(){
+  if(state.asignaturas.length===0){
+    return `<div class="card empty"><h3>Sin asignaturas</h3><p class="small">Agrega las asignaturas del plan de estudio (Lenguaje, Matemática, etc).</p>
+      <div style="height:12px;"></div>
+      <button class="btn btn-primary" onclick="nuevaAsignatura()">${ICONS.plus} Agregar asignatura</button>
+    </div>`;
+  }
+  const items = state.asignaturas.map(a=>`
+    <div class="list-item">
+      <div class="row"><span class="swatch" style="background:${a.color}"></span><span class="name">${escapeHtml(a.nombre)}</span></div>
+      <div class="row">
+        <button class="btn btn-outline btn-sm" onclick="editarAsignatura('${a.id}')">${ICONS.edit}</button>
+        <button class="btn btn-danger btn-sm" onclick="eliminarAsignatura('${a.id}')">${ICONS.trash}</button>
+      </div>
+    </div>`).join('');
+  return `<div class="card"><div class="row between"><h2>Asignaturas (${state.asignaturas.length})</h2>
+      <button class="btn btn-gold btn-sm" onclick="nuevaAsignatura()">${ICONS.plus} Nueva</button></div>${items}</div>`;
+}
+function nuevaAsignatura(){
+  const color = PALETA[state.asignaturas.length % PALETA.length];
+  openSheet(`
+    <h2>Nueva asignatura</h2>
+    <div class="field"><label>Nombre</label><input type="text" id="na_nombre" placeholder="Ej: Matemática"></div>
+    <input type="hidden" id="na_color" value="${color}">
+    <button class="btn btn-primary btn-block" onclick="guardarNuevaAsignatura()">Guardar</button>
+  `);
+}
+function guardarNuevaAsignatura(){
+  const nombre = document.getElementById('na_nombre').value.trim();
+  if(!nombre){ toast('Ingresa un nombre'); return; }
+  state.asignaturas.push({id:uid('asig'), nombre, color:document.getElementById('na_color').value});
+  saveState(); closeModal(); render();
+}
+function editarAsignatura(id){
+  const a = getAsignatura(id);
+  openSheet(`
+    <h2>Editar asignatura</h2>
+    <div class="field"><label>Nombre</label><input type="text" id="ea_nombre" value="${escapeHtml(a.nombre)}"></div>
+    <button class="btn btn-primary btn-block" onclick="guardarEdicionAsignatura('${id}')">Guardar</button>
+  `);
+}
+function guardarEdicionAsignatura(id){
+  getAsignatura(id).nombre = document.getElementById('ea_nombre').value.trim();
+  saveState(); closeModal(); render();
+}
+function eliminarAsignatura(id){
+  confirmarAccion('¿Eliminar esta asignatura? Se quitará de cursos y profesores.', ()=>{
+    state.asignaturas = state.asignaturas.filter(a=>a.id!==id);
+    state.profesores.forEach(p=>{ p.asignaturasIds=(p.asignaturasIds||[]).filter(x=>x!==id); });
+    state.cursos.forEach(c=>{ c.items=(c.items||[]).filter(it=>it.asignaturaId!==id); });
+    saveState(); render();
+  }, 'Eliminar');
+}
+
+/* ============================= TAB: CURSOS ============================= */
+function renderCursos(){
+  if(state.cursos.length===0){
+    return `<div class="card empty"><h3>Sin cursos</h3><p class="small">Crea los cursos (ej: 1°A) y define sus asignaturas, horas semanales y profesor.</p>
+      <div style="height:12px;"></div>
+      <button class="btn btn-primary" onclick="nuevoCurso()">${ICONS.plus} Agregar curso</button>
+    </div>`;
+  }
+  const items = state.cursos.map(c=>{
+    const totalHoras = (c.items||[]).reduce((s,it)=>s+Number(it.horasSemanales||0),0);
+    return `
+    <div class="card">
+      <div class="row between">
+        <div><div class="name">${escapeHtml(c.nombre)}</div><div class="muted small">${totalHoras}h semanales · ${(c.items||[]).length} asignaturas</div></div>
+        <div class="row">
+          <button class="btn btn-outline btn-sm" onclick="editarCursoNombre('${c.id}')">${ICONS.edit}</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarCurso('${c.id}')">${ICONS.trash}</button>
+        </div>
+      </div>
+      <div style="height:8px;"></div>
+      ${(c.items||[]).map(it=>{
+        const a = getAsignatura(it.asignaturaId); const p = getProfesor(it.profesorId);
+        return `<div class="list-item">
+          <div class="row"><span class="swatch" style="background:${a?a.color:'#ccc'}"></span>
+            <div><div class="small" style="font-weight:600;">${a?a.nombre:'—'}</div>
+            <div class="muted small">${it.horasSemanales}h/sem · ${p?p.nombre:'sin profesor'}</div></div>
+          </div>
+          <div class="row">
+            <button class="btn btn-outline btn-sm" onclick="editarItemCurso('${c.id}','${it.id}')">${ICONS.edit}</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminarItemCurso('${c.id}','${it.id}')">${ICONS.trash}</button>
+          </div>
+        </div>`;
+      }).join('') || `<p class="muted small">Sin asignaturas asociadas todavía.</p>`}
+      <div style="height:8px;"></div>
+      <button class="btn btn-outline btn-block btn-sm" onclick="nuevoItemCurso('${c.id}')">${ICONS.plus} Agregar asignatura al curso</button>
+    </div>`;
+  }).join('');
+  return `<div class="row between" style="margin-bottom:4px;"><h2>Cursos (${state.cursos.length})</h2>
+    <button class="btn btn-gold btn-sm" onclick="nuevoCurso()">${ICONS.plus} Nuevo curso</button></div>${items}`;
+}
+function nuevoCurso(){
+  openSheet(`
+    <h2>Nuevo curso</h2>
+    <div class="field"><label>Nombre del curso</label><input type="text" id="nc_nombre" placeholder="Ej: 1°A"></div>
+    <button class="btn btn-primary btn-block" onclick="guardarNuevoCurso()">Guardar</button>
+  `);
+}
+function guardarNuevoCurso(){
+  const nombre = document.getElementById('nc_nombre').value.trim();
+  if(!nombre){ toast('Ingresa un nombre'); return; }
+  const id = uid('curso');
+  state.cursos.push({id, nombre, items:[]});
+  ensureHorarioCurso(id);
+  saveState(); closeModal(); render();
+}
+function editarCursoNombre(id){
+  const c = getCurso(id);
+  openSheet(`
+    <h2>Editar curso</h2>
+    <div class="field"><label>Nombre</label><input type="text" id="ec_nombre" value="${escapeHtml(c.nombre)}"></div>
+    <button class="btn btn-primary btn-block" onclick="guardarEdicionCurso('${id}')">Guardar</button>
+  `);
+}
+function guardarEdicionCurso(id){
+  getCurso(id).nombre = document.getElementById('ec_nombre').value.trim();
+  saveState(); closeModal(); render();
+}
+function eliminarCurso(id){
+  confirmarAccion('¿Eliminar este curso y su horario?', ()=>{
+    state.cursos = state.cursos.filter(c=>c.id!==id);
+    delete state.horario[id];
+    saveState(); render();
+  }, 'Eliminar');
+}
+
+function profesoresDeAsignatura(asigId){
+  return state.profesores.filter(p=>(p.asignaturasIds||[]).includes(asigId));
+}
+function selectAsignaturasOptions(sel){
+  if(state.asignaturas.length===0) return `<option value="">Crea una asignatura primero</option>`;
+  return state.asignaturas.map(a=>`<option value="${a.id}" ${sel===a.id?'selected':''}>${escapeHtml(a.nombre)}</option>`).join('');
+}
+function selectProfesoresOptions(asigId, sel){
+  const profs = asigId ? profesoresDeAsignatura(asigId) : state.profesores;
+  if(profs.length===0) return `<option value="">Sin profesores para esta asignatura</option>`;
+  return profs.map(p=>`<option value="${p.id}" ${sel===p.id?'selected':''}>${escapeHtml(p.nombre)}</option>`).join('');
+}
+function nuevoItemCurso(cursoId){
+  const primerAsig = state.asignaturas[0];
+  openSheet(`
+    <h2>Agregar asignatura al curso</h2>
+    <div class="field"><label>Asignatura</label>
+      <select id="ni_asig" onchange="refrescarProfesSelect(this.value)">${selectAsignaturasOptions(primerAsig?primerAsig.id:'')}</select>
+    </div>
+    <div class="field"><label>Profesor</label><select id="ni_prof">${selectProfesoresOptions(primerAsig?primerAsig.id:'', '')}</select></div>
+    <div class="field"><label>Horas semanales</label><input type="number" id="ni_horas" min="1" placeholder="Ej: 6"></div>
+    <button class="btn btn-primary btn-block" onclick="guardarNuevoItemCurso('${cursoId}')">Guardar</button>
+  `);
+}
+function refrescarProfesSelect(asigId){
+  document.getElementById('ni_prof').innerHTML = selectProfesoresOptions(asigId, '');
+}
+function guardarNuevoItemCurso(cursoId){
+  const asignaturaId = document.getElementById('ni_asig').value;
+  const profesorId = document.getElementById('ni_prof').value;
+  const horas = Number(document.getElementById('ni_horas').value);
+  if(!asignaturaId||!profesorId||!horas){ toast('Completa todos los campos'); return; }
+  const curso = getCurso(cursoId);
+  curso.items = curso.items||[];
+  curso.items.push({id:uid('item'), asignaturaId, profesorId, horasSemanales:horas});
+  saveState(); closeModal(); render();
+}
+function editarItemCurso(cursoId, itemId){
+  const curso = getCurso(cursoId);
+  const item = curso.items.find(i=>i.id===itemId);
+  openSheet(`
+    <h2>Editar asignatura del curso</h2>
+    <div class="field"><label>Asignatura</label>
+      <select id="ei_asig" onchange="refrescarProfesSelectEdit('${item.profesorId}')">${selectAsignaturasOptions(item.asignaturaId)}</select>
+    </div>
+    <div class="field"><label>Profesor</label><select id="ei_prof">${selectProfesoresOptions(item.asignaturaId, item.profesorId)}</select></div>
+    <div class="field"><label>Horas semanales</label><input type="number" id="ei_horas" value="${item.horasSemanales}"></div>
+    <button class="btn btn-primary btn-block" onclick="guardarEdicionItemCurso('${cursoId}','${itemId}')">Guardar</button>
+  `);
+  document.getElementById('ei_asig').onchange = ()=>{ document.getElementById('ei_prof').innerHTML = selectProfesoresOptions(document.getElementById('ei_asig').value,''); };
+}
+function guardarEdicionItemCurso(cursoId, itemId){
+  const curso = getCurso(cursoId);
+  const item = curso.items.find(i=>i.id===itemId);
+  item.asignaturaId = document.getElementById('ei_asig').value;
+  item.profesorId = document.getElementById('ei_prof').value;
+  item.horasSemanales = Number(document.getElementById('ei_horas').value);
+  saveState(); closeModal(); render();
+}
+function eliminarItemCurso(cursoId, itemId){
+  const curso = getCurso(cursoId);
+  curso.items = curso.items.filter(i=>i.id!==itemId);
+  saveState(); render();
+}
+
+/* ============================= TAB: HORARIOS ============================= */
+function renderHorarios(){
+  const vista = state.ui.horVista || 'curso';
+  const seleccionId = state.ui.horSelId || (vista==='curso' ? (state.cursos[0]&&state.cursos[0].id) : (state.profesores[0]&&state.profesores[0].id));
+  state.ui.horVista = vista; state.ui.horSelId = seleccionId;
+
+  if(state.cursos.length===0){
+    return `<div class="card empty"><h3>Aún no hay cursos</h3><p class="small">Crea cursos y asigna asignaturas antes de generar el horario.</p></div>`;
+  }
+
+  const problemas = validarHorarios();
+  const pendientes = calcularPendientes();
+
+  let selectorHtml = '';
+  if(vista==='curso'){
+    selectorHtml = `<select onchange="cambiarSeleccionHorario(this.value)">${state.cursos.map(c=>`<option value="${c.id}" ${c.id===seleccionId?'selected':''}>${escapeHtml(c.nombre)}</option>`).join('')}</select>`;
+  } else {
+    if(state.profesores.length===0) selectorHtml = `<p class="muted small">No hay profesores.</p>`;
+    else selectorHtml = `<select onchange="cambiarSeleccionHorario(this.value)">${state.profesores.map(p=>`<option value="${p.id}" ${p.id===seleccionId?'selected':''}>${escapeHtml(p.nombre)}</option>`).join('')}</select>`;
+  }
+
+  let gridHtml = '';
+  if(vista==='curso' && seleccionId){
+    gridHtml = renderGridCurso(seleccionId, problemas);
+  } else if(vista==='profesor' && seleccionId){
+    gridHtml = renderGridProfesor(seleccionId);
+  }
+
+  return `
+    <div class="card">
+      <div class="row between" style="margin-bottom:10px;">
+        <h2>Horarios</h2>
+        <button class="btn btn-primary btn-sm" onclick="generarHorarios();render();">${ICONS.plus} Generar</button>
+      </div>
+      <div class="tabbar2">
+        <button class="${vista==='curso'?'active':''}" onclick="cambiarVistaHorario('curso')">Por curso</button>
+        <button class="${vista==='profesor'?'active':''}" onclick="cambiarVistaHorario('profesor')">Por profesor</button>
+      </div>
+      <div class="field" style="margin-bottom:0;">${selectorHtml}</div>
+    </div>
+
+    ${pendientes.length>0 ? `<div class="banner"><strong>${pendientes.length} pendiente(s) por ubicar:</strong><br>${pendientes.map(p=>`${p.curso} · ${p.asignatura} (faltan ${p.faltan}h)`).join('<br>')}</div>` : ''}
+
+    <div class="card">${gridHtml}</div>
+
+    ${problemas.length>0 ? `
+    <div class="card">
+      <h2 style="color:var(--red);">Alertas de reglas (${problemas.length})</h2>
+      ${problemas.map(p=>`<div class="violation"><span class="dot"></span><span>${p}</span></div>`).join('')}
+    </div>` : `<div class="card"><div class="row"><span class="chip green">✓ Sin conflictos detectados</span></div></div>`}
+  `;
+}
+function cambiarVistaHorario(v){ state.ui.horVista=v; state.ui.horSelId=null; render(); }
+function cambiarSeleccionHorario(id){ state.ui.horSelId=id; render(); }
+
+function renderGridCurso(cursoId, problemas){
+  ensureHorarioCurso(cursoId);
+  const dias = diasActivos();
+  const bloques = state.config.bloques;
+  let html = `<div class="gridwrap"><table class="grid"><tr><th></th>${dias.map(d=>`<th>${d.slice(0,3)}</th>`).join('')}</tr>`;
+  bloques.forEach(b=>{
+    html += `<tr><td class="timecell">${b.ini}</td>`;
+    dias.forEach((diaNombre,dayIdx)=>{
+      if(b.tipo!=='clase'){
+        html += `<td class="slotcell ${b.tipo}">${b.tipo==='recreo'?'Recreo':'Colación'}</td>`;
+        return;
+      }
+      const cell = state.horario[cursoId][dayIdx][b.id];
+      const asig = cell ? getAsignatura(cell.asignaturaId) : null;
+      const prof = cell ? getProfesor(cell.profesorId) : null;
+      const esConflicto = problemas.some(p=>p.includes(prof?prof.nombre:'\u0000') && p.includes(diaNombre) && p.includes(b.ini));
+      html += `<td class="slotcell ${esConflicto?'conflict':''}" style="background:${asig?asig.color+'22':'#fff'};" onclick="tocarCeldaCurso('${cursoId}',${dayIdx},'${b.id}')">
+        ${asig?`<div class="slot-asig" style="color:${asig.color}">${asig.nombre}</div><div class="slot-prof">${prof?prof.nombre.split(' ')[0]:''}</div>`:'<span class="muted" style="font-size:0.85rem;">+</span>'}
+      </td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</table></div>`;
+  return html;
+}
+
+function renderGridProfesor(profId){
+  const dias = diasActivos();
+  const bloques = state.config.bloques;
+  const prof = getProfesor(profId);
+  let html = `<div class="gridwrap"><table class="grid"><tr><th></th>${dias.map(d=>`<th>${d.slice(0,3)}</th>`).join('')}</tr>`;
+  bloques.forEach(b=>{
+    html += `<tr><td class="timecell">${b.ini}</td>`;
+    dias.forEach((_,dayIdx)=>{
+      if(b.tipo!=='clase'){ html += `<td class="slotcell ${b.tipo}">${b.tipo==='recreo'?'Recreo':'Colación'}</td>`; return; }
+      let encontrado = null, cursoNombre='';
+      state.cursos.forEach(c=>{
+        const cell = state.horario[c.id] && state.horario[c.id][dayIdx] && state.horario[c.id][dayIdx][b.id];
+        if(cell && cell.profesorId===profId){ encontrado=cell; cursoNombre=c.nombre; }
+      });
+      const asig = encontrado ? getAsignatura(encontrado.asignaturaId) : null;
+      const disp = profDisponible(prof, dayIdx, b.id);
+      html += `<td class="slotcell" style="background:${asig?asig.color+'22':(disp?'#fff':'#F8E4E6')};">
+        ${asig?`<div class="slot-asig" style="color:${asig.color}">${cursoNombre}</div><div class="slot-prof">${asig.nombre}</div>`:(disp?'':'<span class="muted" style="font-size:0.6rem;">No disp.</span>')}
+      </td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</table></div>`;
+  return html;
+}
+
+function tocarCeldaCurso(cursoId, dayIdx, bloqueId){
+  const curso = getCurso(cursoId);
+  if(!curso.items || curso.items.length===0){ toast('Este curso no tiene asignaturas configuradas'); return; }
+  const actual = state.horario[cursoId][dayIdx][bloqueId];
+  const opciones = curso.items.map(it=>{
+    const a = getAsignatura(it.asignaturaId); const p = getProfesor(it.profesorId);
+    return `<button class="btn btn-outline btn-block" style="margin-bottom:6px;justify-content:flex-start;" onclick="asignarCelda('${cursoId}',${dayIdx},'${bloqueId}','${it.asignaturaId}','${it.profesorId}')">
+      <span class="swatch" style="background:${a?a.color:'#ccc'};margin-right:6px;"></span>${a?a.nombre:'?'} — ${p?p.nombre:'?'}
+    </button>`;
+  }).join('');
+  openSheet(`
+    <h2>Asignar bloque</h2>
+    <p class="muted small" style="margin-bottom:10px;">${curso.nombre} · ${diasActivos()[dayIdx]} ${state.config.bloques.find(b=>b.id===bloqueId).ini}</p>
+    ${opciones}
+    ${actual?`<button class="btn btn-danger btn-block" onclick="limpiarCelda('${cursoId}',${dayIdx},'${bloqueId}')">Dejar libre</button>`:''}
+  `);
+}
+function asignarCelda(cursoId,dayIdx,bloqueId,asignaturaId,profesorId){
+  state.horario[cursoId][dayIdx][bloqueId] = {asignaturaId, profesorId};
+  saveState(); closeModal(); render();
+}
+function limpiarCelda(cursoId,dayIdx,bloqueId){
+  state.horario[cursoId][dayIdx][bloqueId] = null;
+  saveState(); closeModal(); render();
+}
+
+/* ============================= UTIL ============================= */
+function escapeHtml(s){
+  return String(s||'').replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ============================= INIT ============================= */
+(async function init(){
+  try{
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Tiempo de carga agotado')), 5000)
+    );
+    await Promise.race([loadState(), timeoutPromise]);
+    render();
+  }catch(e){
+    console.error('Error al iniciar:', e);
+    document.getElementById('app-content').innerHTML = `
+      <div class="card" style="background:#F8E4E6;border-color:#B23A48;">
+        <h2 style="color:#B23A48;">Error al cargar</h2>
+        <p class="small" style="margin-bottom:10px;">La app no pudo iniciar. Intenta:</p>
+        <ol class="small" style="margin-left:16px;margin-bottom:10px;">
+          <li>Recarga la página (F5 o ⟳)</li>
+          <li>Cierra y reabre el navegador</li>
+          <li>Asegúrate de que JavaScript está activado</li>
+          <li>Si persiste, descarga nuevamente el archivo</li>
+        </ol>
+        <p class="muted small">Error técnico: ${escapeHtml(e.message)}</p>
+      </div>`;
+  }
+})();
+</script>
+</body>
+</html>
